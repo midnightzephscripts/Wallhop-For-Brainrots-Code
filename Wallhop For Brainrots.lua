@@ -1,5 +1,3 @@
--- LocalScript
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -17,8 +15,8 @@ gui.Parent = playerGui
 
 -- Main Frame
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 320, 0, 160)
-mainFrame.Position = UDim2.new(0.5, -160, 0.5, -80)
+mainFrame.Size = UDim2.new(0, 320, 0, 220)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -110)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
@@ -50,10 +48,10 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.BackgroundTransparency = 1
 title.Parent = header
 
--- Row
+-- Row 1: Auto Pickup Celestials
 local row = Instance.new("Frame")
 row.Size = UDim2.new(1, -30, 0, 50)
-row.Position = UDim2.new(0, 15, 0, 60)
+row.Position = UDim2.new(0, 15, 0, 55)
 row.BackgroundTransparency = 1
 row.Parent = mainFrame
 
@@ -67,7 +65,6 @@ label.BackgroundTransparency = 1
 label.TextXAlignment = Enum.TextXAlignment.Left
 label.Parent = row
 
--- Toggle UI
 local switchBG = Instance.new("TextButton")
 switchBG.Size = UDim2.new(0, 55, 0, 28)
 switchBG.Position = UDim2.new(1, -55, 0.5, -14)
@@ -87,9 +84,50 @@ switchCircle.Parent = switchBG
 
 Instance.new("UICorner", switchCircle).CornerRadius = UDim.new(1, 0)
 
+
+-- Row 2: Auto Collect All Cash (Updated Text)
+local row2 = Instance.new("Frame")
+row2.Size = UDim2.new(1, -30, 0, 50)
+row2.Position = UDim2.new(0, 15, 0, 110)
+row2.BackgroundTransparency = 1
+row2.Parent = mainFrame
+
+local label2 = Instance.new("TextLabel")
+label2.Size = UDim2.new(0.65, 0, 1, 0)
+label2.Text = "Auto Collect All Cash [L]"
+label2.Font = Enum.Font.GothamMedium
+label2.TextSize = 14
+label2.TextColor3 = Color3.fromRGB(200, 200, 200)
+label2.BackgroundTransparency = 1
+label2.TextXAlignment = Enum.TextXAlignment.Left
+label2.Parent = row2
+
+local switchBG2 = Instance.new("TextButton")
+switchBG2.Size = UDim2.new(0, 55, 0, 28)
+switchBG2.Position = UDim2.new(1, -55, 0.5, -14)
+switchBG2.BackgroundColor3 = Color3.fromRGB(235, 64, 52)
+switchBG2.Text = ""
+switchBG2.AutoButtonColor = false
+switchBG2.Parent = row2
+
+Instance.new("UICorner", switchBG2).CornerRadius = UDim.new(1, 0)
+
+local switchCircle2 = Instance.new("Frame")
+switchCircle2.Size = UDim2.new(0, 22, 0, 22)
+switchCircle2.Position = UDim2.new(0, 3, 0.5, -11)
+switchCircle2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+switchCircle2.BorderSizePixel = 0
+switchCircle2.Parent = switchBG2
+
+Instance.new("UICorner", switchCircle2).CornerRadius = UDim.new(1, 0)
+
+
 -- STATE
 local enabled = false
 local busy = false
+
+local plotEnabled = false
+local plotBusy = false
 
 -- DRAGGING
 local dragging, dragInput, dragStart, startPos
@@ -102,7 +140,6 @@ local function updateDrag(input)
         startPos.Y.Scale,
         startPos.Y.Offset + delta.Y
     )
-
     TweenService:Create(mainFrame, TweenInfo.new(0.05), {Position = goal}):Play()
 end
 
@@ -127,59 +164,68 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 
--- TELEPORT ON LOAD (after UI + character ready)
+-- TELEPORT ON LOAD
 local function teleportOnLoad()
     local character = player.Character or player.CharacterAdded:Wait()
     local hrp = character:WaitForChild("HumanoidRootPart", 10)
     if not hrp then return end
 
-    -- small delay to ensure UI is fully created/rendered
     task.wait(0.2)
-
     hrp.CFrame = CFrame.new(-15, 3628, -201)
 end
 
 task.spawn(teleportOnLoad)
 
--- also handle respawn safety (optional but recommended)
 player.CharacterAdded:Connect(function()
     task.wait(0.2)
     teleportOnLoad()
 end)
 
 
-
-
--- TOGGLE SYSTEM (FIXED)
+-- TOGGLE SYSTEM (Row 1)
 local function setToggle(state)
     enabled = state
 
-    local color = enabled and Color3.fromRGB(46, 204, 113)
-        or Color3.fromRGB(235, 64, 52)
+    local color = enabled and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(235, 64, 52)
+    local pos = enabled and UDim2.new(1, -25, 0.5, -11) or UDim2.new(0, 3, 0.5, -11)
 
-    local pos = enabled and UDim2.new(1, -25, 0.5, -11)
-        or UDim2.new(0, 3, 0.5, -11)
-
-    TweenService:Create(switchBG, TweenInfo.new(0.2), {
-        BackgroundColor3 = color
-    }):Play()
-
-    TweenService:Create(switchCircle, TweenInfo.new(0.2), {
-        Position = pos
-    }):Play()
+    TweenService:Create(switchBG, TweenInfo.new(0.2), {BackgroundColor3 = color}):Play()
+    TweenService:Create(switchCircle, TweenInfo.new(0.2), {Position = pos}):Play()
 end
 
 switchBG.MouseButton1Click:Connect(function()
     setToggle(not enabled)
 end)
 
+
+-- TOGGLE SYSTEM (Row 2)
+local function setPlotToggle(state)
+    plotEnabled = state
+
+    local color = plotEnabled and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(235, 64, 52)
+    local pos = plotEnabled and UDim2.new(1, -25, 0.5, -11) or UDim2.new(0, 3, 0.5, -11)
+
+    TweenService:Create(switchBG2, TweenInfo.new(0.2), {BackgroundColor3 = color}):Play()
+    TweenService:Create(switchCircle2, TweenInfo.new(0.2), {Position = pos}):Play()
+end
+
+switchBG2.MouseButton1Click:Connect(function()
+    setPlotToggle(not plotEnabled)
+end)
+
+
+-- Keybinds handling (Updated to L for row 2)
 UserInputService.InputBegan:Connect(function(input, gp)
-    if not gp and input.KeyCode == Enum.KeyCode.P then
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.P then
         setToggle(not enabled)
+    elseif input.KeyCode == Enum.KeyCode.L then
+        setPlotToggle(not plotEnabled)
     end
 end)
 
--- PLAYER
+
+-- HELPER FUNCTIONS
 local function getHRP()
     local char = player.Character
     return char and char:FindFirstChild("HumanoidRootPart")
@@ -191,14 +237,14 @@ local function pressEOnce()
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
 end
 
--- MAIN LOOP (FIXED ANTI-SPAM)
+
+-- MAIN LOOP 1: Celestials Spawner
 task.spawn(function()
     while true do
         task.wait(0.1)
 
         if enabled and not busy then
             busy = true
-
             local hrp = getHRP()
             local returnPos = CFrame.new(-81, 19, -931)
 
@@ -207,40 +253,69 @@ task.spawn(function()
 
             if hrp and folder then
                 for _, obj in ipairs(folder:GetChildren()) do
-                    if not enabled then
-                        busy = false
-                        break
-                    end
+                    if not enabled then break end
 
                     if obj:IsA("Model") and obj.Name == "SpawnedItem" then
                         local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
 
                         if part then
-                            -- 1. teleport to item
                             hrp.CFrame = part.CFrame
-
-                            -- 2. wait 0.5s
                             task.wait(0.5)
 
-                            -- 3. press E once
-                            if enabled then
-                                pressEOnce()
-                            end
-
-                            -- 4. wait 0.2s
+                            if enabled then pressEOnce() end
                             task.wait(0.2)
 
-                            -- 5. teleport back
                             hrp.CFrame = returnPos
-
-                            -- 6. wait 0.5s
                             task.wait(0.5)
                         end
                     end
                 end
             end
-
             busy = false
+        end
+    end
+end)
+
+
+-- MAIN LOOP 2: Plot Floor Slots Teleporter
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+
+        if plotEnabled and not plotBusy then
+            plotBusy = true
+            
+            local plotName = "Plot_" .. player.Name
+            local plot = workspace:FindFirstChild(plotName)
+            local hrp = getHRP()
+
+            if hrp and plot then
+                local floors = {"Floor1", "Floor2", "Floor3"}
+
+                for _, floorName in ipairs(floors) do
+                    if not plotEnabled then break end
+                    
+                    local floor = plot:FindFirstChild(floorName)
+                    local slotsFolder = floor and floor:FindFirstChild("Slots")
+
+                    if slotsFolder then
+                        for _, model in ipairs(slotsFolder:GetChildren()) do
+                            if not plotEnabled then break end
+
+                            if model:IsA("Model") then
+                                local collectTouch = model:FindFirstChild("CollectTouch")
+                                
+                                if collectTouch and collectTouch:IsA("BasePart") then
+                                    hrp.CFrame = collectTouch.CFrame
+                                    task.wait(0.3) 
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            
+            plotBusy = false
         end
     end
 end)
