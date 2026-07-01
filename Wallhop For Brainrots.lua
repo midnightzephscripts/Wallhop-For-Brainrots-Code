@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -15,10 +16,10 @@ gui.ResetOnSpawn = false
 gui.DisplayOrder = 999999
 gui.Parent = playerGui
 
--- Main Frame (Height increased to 280 to fit the button row)
+-- Main Frame (Height increased to 335 to fit the new auto-rebirth row)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 320, 0, 280)
-mainFrame.Position = UDim2.new(0.5, -160, 0.5, -140)
+mainFrame.Size = UDim2.new(0, 320, 0, 335)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -167)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
@@ -42,7 +43,7 @@ Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -20, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
-title.Text = "WallHop For Brainrots"
+title.Text = "ZephHub"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -124,10 +125,47 @@ switchCircle2.Parent = switchBG2
 Instance.new("UICorner", switchCircle2).CornerRadius = UDim.new(1, 0)
 
 
--- Row 3: Regular Teleport Button (New Row)
+-- Row 3: Auto Rebirth (NEW TOGGLE)
+local rowRebirth = Instance.new("Frame")
+rowRebirth.Size = UDim2.new(1, -30, 0, 50)
+rowRebirth.Position = UDim2.new(0, 15, 0, 165)
+rowRebirth.BackgroundTransparency = 1
+rowRebirth.Parent = mainFrame
+
+local labelRebirth = Instance.new("TextLabel")
+labelRebirth.Size = UDim2.new(0.65, 0, 1, 0)
+labelRebirth.Text = "Auto Rebirth [K]"
+labelRebirth.Font = Enum.Font.GothamMedium
+labelRebirth.TextSize = 14
+labelRebirth.TextColor3 = Color3.fromRGB(200, 200, 200)
+labelRebirth.BackgroundTransparency = 1
+labelRebirth.TextXAlignment = Enum.TextXAlignment.Left
+labelRebirth.Parent = rowRebirth
+
+local switchBGRebirth = Instance.new("TextButton")
+switchBGRebirth.Size = UDim2.new(0, 55, 0, 28)
+switchBGRebirth.Position = UDim2.new(1, -55, 0.5, -14)
+switchBGRebirth.BackgroundColor3 = Color3.fromRGB(235, 64, 52)
+switchBGRebirth.Text = ""
+switchBGRebirth.AutoButtonColor = false
+switchBGRebirth.Parent = rowRebirth
+
+Instance.new("UICorner", switchBGRebirth).CornerRadius = UDim.new(1, 0)
+
+local switchCircleRebirth = Instance.new("Frame")
+switchCircleRebirth.Size = UDim2.new(0, 22, 0, 22)
+switchCircleRebirth.Position = UDim2.new(0, 3, 0.5, -11)
+switchCircleRebirth.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+switchCircleRebirth.BorderSizePixel = 0
+switchCircleRebirth.Parent = switchBGRebirth
+
+Instance.new("UICorner", switchCircleRebirth).CornerRadius = UDim.new(1, 0)
+
+
+-- Row 4: Regular Teleport Button (Shifted down)
 local row3 = Instance.new("Frame")
 row3.Size = UDim2.new(1, -30, 0, 50)
-row3.Position = UDim2.new(0, 15, 0, 165)
+row3.Position = UDim2.new(0, 15, 0, 220)
 row3.BackgroundTransparency = 1
 row3.Parent = mainFrame
 
@@ -165,6 +203,8 @@ local busy = false
 
 local plotEnabled = false
 local plotBusy = false
+
+local rebirthEnabled = false
 
 -- DRAGGING
 local dragging, dragInput, dragStart, startPos
@@ -251,6 +291,22 @@ switchBG2.MouseButton1Click:Connect(function()
 end)
 
 
+-- TOGGLE SYSTEM (Row 3 - Auto Rebirth)
+local function setRebirthToggle(state)
+    rebirthEnabled = state
+
+    local color = rebirthEnabled and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(235, 64, 52)
+    local pos = rebirthEnabled and UDim2.new(1, -25, 0.5, -11) or UDim2.new(0, 3, 0.5, -11)
+
+    TweenService:Create(switchBGRebirth, TweenInfo.new(0.2), {BackgroundColor3 = color}):Play()
+    TweenService:Create(switchCircleRebirth, TweenInfo.new(0.2), {Position = pos}):Play()
+end
+
+switchBGRebirth.MouseButton1Click:Connect(function()
+    setRebirthToggle(not rebirthEnabled)
+end)
+
+
 -- HELPER FUNCTIONS
 local function getHRP()
     local char = player.Character
@@ -264,7 +320,7 @@ local function pressEOnce()
 end
 
 
--- BUTTON ACTIONS (Row 3 - New Action)
+-- BUTTON ACTIONS (Row 4)
 tpButton.MouseButton1Click:Connect(function()
     local hrp = getHRP()
     if hrp then
@@ -280,6 +336,8 @@ UserInputService.InputBegan:Connect(function(input, gp)
         setToggle(not enabled)
     elseif input.KeyCode == Enum.KeyCode.L then
         setPlotToggle(not plotEnabled)
+    elseif input.KeyCode == Enum.KeyCode.K then
+        setRebirthToggle(not rebirthEnabled)
     end
 end)
 
@@ -362,6 +420,29 @@ task.spawn(function()
             end
             
             plotBusy = false
+        end
+    end
+end)
+
+
+-- MAIN LOOP 3: Auto Rebirth (Checks Bar.Progress Size X Scale >= 1)
+task.spawn(function()
+    local requestRebirthEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("RequestRebirth")
+    
+    while true do
+        task.wait(0.1)
+        
+        if rebirthEnabled then
+            -- Safely look up the path before evaluating scale
+            local progress = playerGui:FindFirstChild("GUI") 
+                and playerGui.GUI:FindFirstChild("Frames")
+                and playerGui.GUI.Frames:FindFirstChild("Rebirth")
+                and playerGui.GUI.Frames.Rebirth:FindFirstChild("Bar")
+                and playerGui.GUI.Frames.Rebirth.Bar:FindFirstChild("Progress")
+                
+            if progress and progress.Size.X.Scale >= 1 then
+                requestRebirthEvent:FireServer()
+            end
         end
     end
 end)
