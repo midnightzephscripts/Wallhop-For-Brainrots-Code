@@ -1,3 +1,5 @@
+-- LocalScript
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -13,10 +15,10 @@ gui.ResetOnSpawn = false
 gui.DisplayOrder = 999999
 gui.Parent = playerGui
 
--- Main Frame
+-- Main Frame (Height increased to 280 to fit the button row)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 320, 0, 220)
-mainFrame.Position = UDim2.new(0.5, -160, 0.5, -110)
+mainFrame.Size = UDim2.new(0, 320, 0, 280)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -140)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
@@ -85,7 +87,7 @@ switchCircle.Parent = switchBG
 Instance.new("UICorner", switchCircle).CornerRadius = UDim.new(1, 0)
 
 
--- Row 2: Auto Collect All Cash (Updated Text)
+-- Row 2: Auto Collect All Cash
 local row2 = Instance.new("Frame")
 row2.Size = UDim2.new(1, -30, 0, 50)
 row2.Position = UDim2.new(0, 15, 0, 110)
@@ -120,6 +122,41 @@ switchCircle2.BorderSizePixel = 0
 switchCircle2.Parent = switchBG2
 
 Instance.new("UICorner", switchCircle2).CornerRadius = UDim.new(1, 0)
+
+
+-- Row 3: Regular Teleport Button (New Row)
+local row3 = Instance.new("Frame")
+row3.Size = UDim2.new(1, -30, 0, 50)
+row3.Position = UDim2.new(0, 15, 0, 165)
+row3.BackgroundTransparency = 1
+row3.Parent = mainFrame
+
+local label3 = Instance.new("TextLabel")
+label3.Size = UDim2.new(0.55, 0, 1, 0)
+label3.Text = "Teleport to Divine Zone"
+label3.Font = Enum.Font.GothamMedium
+label3.TextSize = 14
+label3.TextColor3 = Color3.fromRGB(200, 200, 200)
+label3.BackgroundTransparency = 1
+label3.TextXAlignment = Enum.TextXAlignment.Left
+label3.Parent = row3
+
+local tpButton = Instance.new("TextButton")
+tpButton.Size = UDim2.new(0, 90, 0, 30)
+tpButton.Position = UDim2.new(1, -90, 0.5, -15)
+tpButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+tpButton.Text = "Teleport"
+tpButton.Font = Enum.Font.GothamBold
+tpButton.TextSize = 12
+tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpButton.Parent = row3
+
+Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(65, 65, 65)
+buttonStroke.Thickness = 1
+buttonStroke.Parent = tpButton
 
 
 -- STATE
@@ -214,17 +251,6 @@ switchBG2.MouseButton1Click:Connect(function()
 end)
 
 
--- Keybinds handling (Updated to L for row 2)
-UserInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.P then
-        setToggle(not enabled)
-    elseif input.KeyCode == Enum.KeyCode.L then
-        setPlotToggle(not plotEnabled)
-    end
-end)
-
-
 -- HELPER FUNCTIONS
 local function getHRP()
     local char = player.Character
@@ -236,6 +262,26 @@ local function pressEOnce()
     task.wait(0.05)
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
 end
+
+
+-- BUTTON ACTIONS (Row 3 - New Action)
+tpButton.MouseButton1Click:Connect(function()
+    local hrp = getHRP()
+    if hrp then
+        hrp.CFrame = CFrame.new(-9, 7340, -60)
+    end
+end)
+
+
+-- Keybinds handling
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.P then
+        setToggle(not enabled)
+    elseif input.KeyCode == Enum.KeyCode.L then
+        setPlotToggle(not plotEnabled)
+    end
+end)
 
 
 -- MAIN LOOP 1: Celestials Spawner
